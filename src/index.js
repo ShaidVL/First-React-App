@@ -1,12 +1,59 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import {Provider} from 'react-redux';
+import {createStore} from 'redux';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+import App from './mycomponents/App';
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+const initialState = {
+    Posts: [],
+}
+
+const feed = (state = initialState, action) => {
+    switch (action.type) {
+        case 'AddPost':
+            const post = {
+                id: action.id,
+                title: action.authorPost,
+                text: action.textPost,
+                like: 0,
+                dislike: 0,
+                showInputComments: false,
+                comments: [],
+            };
+            return {...state, Posts: [...state.Posts, post]};
+        case 'RemovePost':
+            const removePost = state.Posts.filter(post => post.id !== action.id);
+            return {...state, Posts: removePost};
+        case 'AddLike':
+            const changedAddLikePosts = state.Posts.map(post => post.id === action.id ? {...post, like: post.like + 1} : post);
+            return {...state, Posts: changedAddLikePosts};
+        case 'Dislike':
+            const changedDislikePosts = state.Posts.map(post => post.id === action.id ? {...post, dislike: post.dislike - 1} : post);
+            return {...state, Posts: changedDislikePosts};
+        case 'AddComment':
+            const comment = {
+                id: action.id,
+                title: action.authorComment,
+                text: action.textComment,
+                show: false,
+            };
+            const changedCommentPosts = state.Posts.map(post => post.id === action.initialId ? {...post, comments: [...post.comments, comment]} : post);
+            return {...state, Posts: changedCommentPosts};
+        case 'ShowComments':
+            const changedShowCommentsPosts = state.Posts.map(post => post.id === action.id ? {...post, showInputComments: !post.showInputComments} : post);
+            return {...state, Posts: changedShowCommentsPosts};
+        default:
+            return state;
+
+    }
+}
+
+const store = createStore(feed, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+
+ReactDOM.render(
+    <Provider store={store}>
+        <App/>
+    </Provider>,
+    document.getElementById('root')
+);
